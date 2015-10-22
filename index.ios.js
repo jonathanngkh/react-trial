@@ -11,40 +11,48 @@ var {
   Text,
   View,
   Image,
+  ListView,
 } = React;
 
 var REQUEST_URL = 'https://raw.githubusercontent.com/facebook/react-native/master/docs/MoviesExample.json';
 
-var MOCKED_MOVIES_DATA = [
-  { title: 'Title', year: '2015', posters: { thumbnail: 'http://i.imgur.com/UePbdph.jpg' } },
-];
-
 var reactTrial = React.createClass({
+  getInitialState: function() {
+    return {
+      dataSource: new ListView.DataSource({
+        rowHasChanged: (row1, row2) => row1 !== row2,
+      }),
+      loaded: false,
+    };
+  },
+
+  componentDidMount: function() {
+    this.fetchData();
+  },
+
   fetchData: function() {
     fetch(REQUEST_URL)
       .then((response) => response.json())
       .then((responseData) => {
         this.setState({
-          movies: responseData.movies,
+          dataSource: this.state.dataSource.cloneWithRows(responseData.movies),
+          loaded: true,
         });
       })
       .done();
   },
-  componentDidMount: function() {
-    this.fetchData();
-  },
-  getInitialState: function() {
-    return {
-      movies: null,
-    };
-  },
+
   render: function() {
-    if (!this.state.movies) {
+    if (!this.state.loaded) {
       return this.renderLoadingView();
     }
 
-    var movie = this.state.movies[0];
-    return this.renderMovie(movie);
+    return (
+      <ListView
+        dataSource={ this.state.dataSource }
+        renderRow ={ this.renderMovie }
+        style={ styles.listView } />
+    );
   },
   renderLoadingView: function() {
     return (
@@ -58,7 +66,10 @@ var reactTrial = React.createClass({
   renderMovie: function(movie) {
     return (
       <View style={ styles.container }>
-        <Image source={ { uri: movie.posters.thumbnail } } style={ styles.thumbnail } />
+        <Image
+          source={ { uri: movie.posters.thumbnail } }
+          style={ styles.thumbnail } />
+
         <View style={ styles.rightContainer }>
           <Text style={ styles.title }>{ movie.title }</Text>
           <Text style={ styles.year }>{ movie.year }</Text>
@@ -90,6 +101,10 @@ var styles = StyleSheet.create({
   },
   year: {
     textAlign: 'center',
+  },
+  listView: {
+    paddingTop: 20,
+    backgroundColor: '#F5FCFF',
   },
 });
 
