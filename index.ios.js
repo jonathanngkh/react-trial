@@ -39,11 +39,27 @@ var reactTrial = React.createClass({
     };
   },
   render: function() {
-    var movie = MOCKED_MOVIES_DATA[0];
+    if (!this.state.movies) {
+      return this.renderLoadingView();
+    }
+
+    var movie = this.state.movies[0];
+    return this.renderMovie(movie);
+  },
+  renderLoadingView: function() {
+    return (
+      <View style={ styles.container }>
+        <Text>
+          Loading movies...
+        </Text>
+      </View>
+    );
+  },
+  renderMovie: function(movie) {
     return (
       <View style={ styles.container }>
         <Image source={ { uri: movie.posters.thumbnail } } style={ styles.thumbnail } />
-        <View style={ styles.rightcontainer }>
+        <View style={ styles.rightContainer }>
           <Text style={ styles.title }>{ movie.title }</Text>
           <Text style={ styles.year }>{ movie.year }</Text>
         </View>
@@ -56,13 +72,12 @@ var styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
   rightContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   thumbnail: {
     width: 53,
