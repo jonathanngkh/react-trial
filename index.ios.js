@@ -5,6 +5,7 @@
 'use strict';
 
 var React = require('react-native');
+var PushManager = require('./node_modules/react-native-remote-push/RemotePushIOS');
 var {
   AppRegistry,
   StyleSheet,
