@@ -1371,13 +1371,15 @@ throw new TypeError(
 
 var index=findIndex.call(this,predicate,context);
 return index === -1?undefined:this[index];}});}})();
-__d('reactTrial/index.ios.js',["react-native/Libraries/react-native/react-native.js"],function(global, require, module, exports) {  'use strict';
+__d('reactTrial/index.ios.js',["react-native/Libraries/react-native/react-native.js","react-native-remote-push/RemotePushIOS.js"],function(global, require, module, exports) {  'use strict';
 
 
 
 
 
-var React=require('react-native/Libraries/react-native/react-native.js');var 
+var React=require('react-native/Libraries/react-native/react-native.js');
+var PushManager=require('react-native-remote-push/RemotePushIOS.js');
+var registerInstallation=require('./Installation');var 
 
 AppRegistry=
 
@@ -1400,7 +1402,19 @@ loaded:false};},
 
 
 componentDidMount:function(){
-this.fetchData();},
+this.fetchData();
+PushManager.requestPermissions(function(err,data){
+if(err){
+console.log("Could not register for push");}else 
+{
+registerInstallation({
+"deviceType":"ios",
+"deviceToken":data.token,
+"channels":["global"]});}});
+
+
+
+PushManager.setListenerForNotifications(this.receiveRemoteNotification);},
 
 
 fetchData:function(){var _this=this;
@@ -1480,6 +1494,26 @@ paddingTop:20,
 backgroundColor:'#F5FCFF'}});
 
 
+
+var registerInstallation=function(data){
+var url="https://api.parse.com";
+url += "/1/installations";
+fetch(url,{
+method:'post',
+headers:{
+'Accept':'application/json',
+'X-Parse-Application-Id':PARSE_APP_ID,
+'X-Parse-REST-API-Key':PARSE_REST_KEY,
+'Content-Type':'application/json'},
+
+body:JSON.stringify(data)}).
+
+then(processStatus).
+then(parseJson).
+catch(error);};
+
+
+module.exports = registerInstallation;
 
 AppRegistry.registerComponent('reactTrial',function(){return reactTrial;});
 });
@@ -5198,7 +5232,7 @@ NodeHandle.injection.injectImplementation(UniversalWorkerNodeHandle);}
 module.exports = {
 inject:inject};
 });
-__d('InitializeJavaScriptAppEngine',["RCTDebugComponentOwnership","RCTDeviceEventEmitter","PerformanceLogger","regenerator/runtime.js","ExceptionsManager","ErrorUtils","ExceptionsManager","Platform","checkFlowAtRuntime","JSTimers","NativeModules","Promise","XMLHttpRequest","FormData","fetch","Geolocation","WebSocket","BridgeProfiling"],function(global, require, module, exports) {  require(
+__d('InitializeJavaScriptAppEngine',["RCTDebugComponentOwnership","RCTDeviceEventEmitter","PerformanceLogger","ExceptionsManager","ErrorUtils","ExceptionsManager","Platform","checkFlowAtRuntime","JSTimers","NativeModules","Promise","XMLHttpRequest","FormData","fetch","Geolocation","WebSocket","BridgeProfiling","regenerator/runtime.js"],function(global, require, module, exports) {  require(
 
 
 
@@ -21640,7 +21674,7 @@ one[15] !== two[15];};
 
 module.exports = matricesDiffer;
 });
-__d('processColor',["tinycolor2/tinycolor.js","Platform"],function(global, require, module, exports) {  'use strict';
+__d('processColor',["Platform","tinycolor2/tinycolor.js"],function(global, require, module, exports) {  'use strict';
 
 
 
@@ -25980,7 +26014,7 @@ return dimensions[dim];}}]);return Dimensions;})();
 
 module.exports = Dimensions;
 });
-__d('ListView',["ListViewDataSource","React","NativeModules","NativeModules","ScrollView","ScrollResponder","StaticRenderer","react-timer-mixin/TimerMixin.js","isEmpty","logError","merge"],function(global, require, module, exports) {  'use strict';var _extends=Object.assign || function(target){for(var i=1;i < arguments.length;i++) {var source=arguments[i];for(var key in source) {if(Object.prototype.hasOwnProperty.call(source,key)){target[key] = source[key];}}}return target;};function _objectWithoutProperties(obj,keys){var target={};for(var i in obj) {if(keys.indexOf(i) >= 0)continue;if(!Object.prototype.hasOwnProperty.call(obj,i))continue;target[i] = obj[i];}return target;}
+__d('ListView',["ListViewDataSource","React","NativeModules","NativeModules","ScrollView","ScrollResponder","StaticRenderer","isEmpty","logError","merge","react-timer-mixin/TimerMixin.js"],function(global, require, module, exports) {  'use strict';var _extends=Object.assign || function(target){for(var i=1;i < arguments.length;i++) {var source=arguments[i];for(var key in source) {if(Object.prototype.hasOwnProperty.call(source,key)){target[key] = source[key];}}}return target;};function _objectWithoutProperties(obj,keys){var target={};for(var i in obj) {if(keys.indexOf(i) >= 0)continue;if(!Object.prototype.hasOwnProperty.call(obj,i))continue;target[i] = obj[i];}return target;}
 
 
 
@@ -30084,7 +30118,7 @@ this.emit(arg.eventType,arg.data,arg.didEmitCallback);}}}]);return NavigationEve
 
 module.exports = NavigationEventEmitter;
 });
-__d('NavigatorBreadcrumbNavigationBar',["NavigatorBreadcrumbNavigationBarStyles","NavigatorNavigationBarStyles","React","StaticContainer.react","StyleSheet","View","immutable/dist/immutable.js","invariant"],function(global, require, module, exports) {  'use strict';
+__d('NavigatorBreadcrumbNavigationBar',["NavigatorBreadcrumbNavigationBarStyles","NavigatorNavigationBarStyles","React","StaticContainer.react","StyleSheet","View","invariant","immutable/dist/immutable.js"],function(global, require, module, exports) {  'use strict';
 
 
 
@@ -53667,6 +53701,46 @@ Object.keys(componentOrElement));}
 
 
 module.exports = findDOMNode;
+});
+__d('react-native-remote-push/RemotePushIOS.js',["react-native/Libraries/react-native/react-native.js"],function(global, require, module, exports) {  var RemotePushManager=require("NativeModules").RemotePushManager;
+var React=require("react-native/Libraries/react-native/react-native.js");var 
+
+
+DeviceEventEmitter=
+React.DeviceEventEmitter;
+
+const REGISTERED_FOR_REMOTE="registeredForRemoteNotifications";
+const REGISTERED_FOR_REMOTE_ERROR="registeredForRemoteNotificationsError";
+const RECEIVED_REMOTE="receivedRemoteNotification";
+
+module.exports = {
+requestPermissions:function(callback){
+RemotePushManager.requestPermissions();
+
+DeviceEventEmitter.addListener(
+REGISTERED_FOR_REMOTE,function(notification){
+callback(null,notification);});
+
+
+
+DeviceEventEmitter.addListener(
+REGISTERED_FOR_REMOTE_ERROR,function(error){
+callback("Couldn't register for notifications");});},
+
+
+
+
+setListenerForNotifications:function(callback){
+RemotePushManager.getStartupNotifications(function(err,startupNotification){
+if(startupNotification){
+callback(startupNotification);}});
+
+
+
+
+DeviceEventEmitter.addListener(
+RECEIVED_REMOTE,function(notification){
+callback(notification);});}};
 });
 ;require("reactTrial/index.ios.js");
 //@ sourceMappingURL=/index.ios.map?platform=ios&dev=false

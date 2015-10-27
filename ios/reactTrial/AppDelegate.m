@@ -8,15 +8,23 @@
  */
 
 #import "AppDelegate.h"
-
 #import "RCTRootView.h"
-
-#import "RemotePushDelegate.h"
+#import <Parse/Parse.h>
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  [Parse setApplicationId:@"ps3Z6yXuxWLckAM38LOBzeLM61zH6aTmuxA39CFh"
+                clientKey:@"TzFr8dHKAvgBUClYV7FxlfaTayby2yxdzrkniPst"];
+  // Register for Push Notitications
+  UIUserNotificationType userNotificationTypes = (UIUserNotificationTypeAlert |
+                                                  UIUserNotificationTypeBadge |
+                                                  UIUserNotificationTypeSound);
+  UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:userNotificationTypes
+                                                                           categories:nil];
+  [application registerUserNotificationSettings:settings];
+  [application registerForRemoteNotifications];
   NSURL *jsCodeLocation;
   /**
    * Loading JavaScript code - uncomment the one you want.
@@ -61,6 +69,17 @@
 
 - (id) init {
   return self;
+}
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+  // Store the deviceToken in the current installation and save it to Parse.
+  PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+  [currentInstallation setDeviceTokenFromData:deviceToken];
+  [currentInstallation saveInBackground];
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+  [PFPush handlePush:userInfo];
 }
 
 @end
